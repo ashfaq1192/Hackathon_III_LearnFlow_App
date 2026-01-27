@@ -1,0 +1,62 @@
+---
+name: kong-gateway-setup
+description: |
+  Deploy Kong API Gateway on Kubernetes with JWT authentication and routing. This skill
+  should be used when setting up API gateway, configuring service routing, adding
+  authentication/authorization, or implementing rate limiting for microservices.
+---
+
+# Kong API Gateway Setup
+
+Deploy and configure Kong Gateway for LearnFlow microservices.
+
+## When to Use
+
+- Deploy API gateway for microservices
+- Configure routing and load balancing
+- Add JWT authentication to APIs
+- Implement rate limiting and CORS
+
+## Prerequisites
+
+- Kubernetes cluster running
+- Helm 3 installed
+- Microservices deployed (triage, concepts, exercise, code-execution)
+
+## Instructions
+
+### 1. Deploy Kong
+```bash
+python scripts/deploy_kong.py --namespace kong --database postgres
+```
+
+### 2. Configure Services
+```bash
+python scripts/configure_services.py --namespace learnflow --config services.yaml
+```
+
+Routes microservices through Kong gateway.
+
+### 3. Enable JWT Auth
+```bash
+python scripts/enable_jwt_auth.py --issuer better-auth --namespace kong
+```
+
+### 4. Configure Rate Limiting
+```bash
+python scripts/configure_rate_limiting.py --requests 100 --per minute
+```
+
+## Validation
+
+- [ ] Kong pods running
+- [ ] Admin API accessible
+- [ ] Services registered
+- [ ] JWT validation works
+- [ ] Rate limiting active
+
+## See Also
+
+- `references/kong-architecture.md` - Kong concepts and plugins
+- `references/jwt-authentication.md` - JWT configuration for Better Auth
+- `references/routing-config.md` - Service routing patterns

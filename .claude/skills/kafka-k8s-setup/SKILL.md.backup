@@ -1,0 +1,88 @@
+---
+name: kafka-k8s-setup
+description: |
+  Deploy Apache Kafka on Kubernetes with event-driven architecture topics. This skill
+  should be used when setting up Kafka messaging infrastructure for microservices,
+  creating pub/sub event streams, or building event-driven applications. Includes
+  Zookeeper, Kafka brokers, and topic creation for LearnFlow platform.
+---
+
+# Kafka Kubernetes Setup
+
+Deploy production-ready Apache Kafka cluster on Kubernetes with required topics for event-driven architecture.
+
+## When to Use
+
+- Deploy Kafka cluster for event streaming
+- Set up pub/sub messaging for microservices
+- Create Kafka topics for event-driven applications
+- Configure Kafka for LearnFlow platform (learning events, code submission, struggle detection)
+
+## Prerequisites
+
+- Kubernetes cluster running (checked via k8s-foundation)
+- `kubectl` configured
+- Helm 3 installed (for Kafka deployment)
+- Target namespace exists (default: `learnflow`)
+
+## Instructions
+
+### 1. Deploy Kafka Cluster
+```bash
+python scripts/deploy_kafka.py --namespace <namespace> --brokers 3
+```
+Deploys Kafka with Zookeeper using Helm. Creates 3 broker replicas by default.
+
+### 2. Verify Kafka Health
+```bash
+python scripts/check_kafka.py --namespace <namespace>
+```
+Checks broker readiness, Zookeeper connectivity, and cluster health.
+
+### 3. Create Application Topics
+```bash
+python scripts/create_topics.py --namespace <namespace> --config <topics-config.yaml>
+```
+Creates topics with specified partitions and replication. LearnFlow default topics:
+- `learning.events` - Student learning activities
+- `code.submitted` - Code submissions for execution
+- `struggle.detected` - AI-detected student struggles
+
+### 4. Test Kafka Connection
+```bash
+python scripts/test_kafka.py --namespace <namespace> --topic test-topic
+```
+Produces and consumes test message to verify functionality.
+
+## Validation
+
+After deployment, verify:
+- [ ] Kafka pods running: `kubectl get pods -n <namespace> -l app.kubernetes.io/name=kafka`
+- [ ] Zookeeper healthy: `kubectl get pods -n <namespace> -l app.kubernetes.io/name=zookeeper`
+- [ ] Topics created: Use `scripts/list_topics.py`
+- [ ] Message flow works: Use `scripts/test_kafka.py`
+
+## Configuration
+
+Default configuration (customizable via `templates/kafka-values.yaml`):
+- **Brokers**: 3 replicas
+- **Partitions**: 3 per topic
+- **Replication Factor**: 2
+- **Retention**: 7 days
+
+For production: Adjust resources, enable auth (SASL/SSL), configure monitoring.
+
+## Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| Pods pending | Check PVC storage class availability |
+| Broker not ready | Check logs: `kubectl logs <pod> -n <namespace>` |
+| Topic creation fails | Verify broker connectivity with `check_kafka.py` |
+| Messages not flowing | Check network policies, service endpoints |
+
+## See Also
+
+- `references/kafka-architecture.md` - Kafka concepts and architecture
+- `references/kafka-k8s-best-practices.md` - Production deployment guidelines
+- `references/topic-design.md` - Topic design patterns for event streaming

@@ -1,0 +1,76 @@
+---
+name: mcp-code-execution
+description: |
+  Reference implementation and guide for MCP Code Execution pattern. This skill should
+  be used when learning how to create token-efficient skills, understanding the pattern
+  of wrapping operations in scripts, or teaching AI agents about code execution approach.
+---
+
+# MCP Code Execution Pattern
+
+Learn and implement the MCP Code Execution pattern for token-efficient skills.
+
+## Pattern Overview
+
+**Problem**: Direct MCP integration loads tools into context (15,000+ tokens), consuming 41% before work begins.
+
+**Solution**: Code Execution pattern achieves 78.5% token reduction:
+1. **SKILL.md** (~100 tokens) - Instructions (WHAT to do)
+2. **scripts/** (0 tokens loaded) - Executable code (HOW to do it)
+3. **Result** (< 50 tokens) - Filtered output only
+
+## When to Use
+
+- Creating new skills for Claude Code/Goose
+- Reducing token consumption in existing skills
+- Wrapping MCP operations in scripts
+- Teaching the pattern to other developers
+
+## Pattern Implementation
+
+### 1. Minimal SKILL.md
+```markdown
+---
+name: example-skill
+description: Brief description under 1024 chars
+---
+
+## Instructions
+1. Run: `python scripts/operation.py --param value`
+2. Verify: Check output shows "✓ Success"
+```
+
+### 2. Script Execution
+```python
+# scripts/operation.py
+import subprocess
+
+# Execute operation (kubectl, psql, API calls, etc.)
+result = subprocess.run(["kubectl", "get", "pods"], ...)
+
+# Filter data BEFORE returning to context
+# Return only: status + minimal essential data
+if result.returncode == 0:
+    print("✓ 5/5 pods running")  # NOT full kubectl output
+    return 0
+```
+
+### 3. Result in Context
+```
+User: "Use example-skill"
+Agent reads SKILL.md (~100 tokens) → Executes script → Gets "✓ 5/5 pods running" (~10 tokens)
+Total context: ~110 tokens vs 15,000+ with direct MCP
+```
+
+## Token Comparison
+
+| Approach | Startup | Per Use | Total (5 uses) |
+|----------|---------|---------|----------------|
+| Direct MCP | 15,000 | 500 | 17,500 |
+| Code Execution | 0 | 110 | 550 |
+| **Savings** | **100%** | **78%** | **96.9%** |
+
+## See Also
+
+- `references/pattern-examples.md` - Real-world implementation examples
+- `references/anti-patterns.md` - Common mistakes to avoid
