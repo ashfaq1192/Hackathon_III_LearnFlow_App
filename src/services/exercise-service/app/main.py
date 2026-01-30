@@ -1,12 +1,15 @@
-"""FastAPI application with Dapr integration."""
+"""Exercise Service - CRUD API for managing coding exercises."""
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from typing import List, Optional
 import os
+import requests
+import uuid
 
 app = FastAPI(
     title="exercise-service",
-    description="Exercise Service microservice",
+    description="CRUD API for managing Python coding exercises",
     version="1.0.0"
 )
 
@@ -21,6 +24,23 @@ app.add_middleware(
 # Dapr configuration
 DAPR_HTTP_PORT = os.getenv("DAPR_HTTP_PORT", "3500")
 DAPR_BASE_URL = f"http://localhost:{DAPR_HTTP_PORT}"
+STATE_STORE = "statestore"
+
+
+class Exercise(BaseModel):
+    id: Optional[str] = None
+    title: str
+    description: str
+    difficulty: str = "beginner"
+    starter_code: str = ""
+    expected_output: str = ""
+    hints: List[str] = []
+
+
+class Submission(BaseModel):
+    exercise_id: str
+    user_id: str
+    code: str
 
 
 @app.get("/health")
@@ -28,56 +48,84 @@ async def health():
     """Health check endpoint."""
     return {"status": "healthy", "service": "exercise-service"}
 
+
 @app.get("/dapr/subscribe")
 async def subscribe():
     """Dapr pub/sub subscriptions."""
     return [
-        {"pubsubname": "pubsub", "topic": "exercise_service", "route": "/events"}
+        {"pubsubname": "pubsub", "topic": "learning.events", "route": "/events/learning"}
     ]
 
 
-from typing import List, Optional
+@app.post("/exercises", response_model=Exercise)
+async def create_exercise(exercise: Exercise):
+    """Create a new coding exercise."""
+    exercise.id = str(uuid.uuid4())
 
-class Item(BaseModel):
-    id: Optional[str] = None
-    name: str
-    data: dict = {}
-
-@app.post("/items")
-async def create_item(item: Item):
-    """Create new item with Dapr state store."""
-    import requests
-    import uuid
-
-    item_id = str(uuid.uuid4())
-    item.id = item_id
-
-    # Save to Dapr state store
     response = requests.post(
-        f"{DAPR_BASE_URL}/v1.0/state/statestore",
-        json=[{"key": item_id, "value": item.dict()}]
+        f"{DAPR_BASE_URL}/v1.0/state/{STATE_STORE}",
+        json=[{"key": f"exercise-{exercise.id}", "value": exercise.model_dump()}]
     )
 
-    if response.status_code != 204:
-        raise HTTPException(status_code=500, detail="Failed to save item")
+    if response.status_code not in (200, 204):
+        raise HTTPException(status_code=500, detail="Failed to save exercise")
 
-    return item
+    return exercise
 
-@app.get("/items/{item_id}")
-async def get_item(item_id: str):
-    """Get item from Dapr state store."""
-    import requests
 
-    response = requests.get(f"{DAPR_BASE_URL}/v1.0/state/statestore/{item_id}")
+@app.get("/exercises/{exercise_id}", response_model=Exercise)
+async def get_exercise(exercise_id: str):
+    """Get an exercise by ID."""
+    response = requests.get(
+        f"{DAPR_BASE_URL}/v1.0/state/{STATE_STORE}/exercise-{exercise_id}"
+    )
 
-    if response.status_code == 204:
-        raise HTTPException(status_code=404, detail="Item not found")
+    if response.status_code == 204 or not response.text:
+        raise HTTPException(status_code=404, detail="Exercise not found")
 
-    return response.json()
+    return Exercise(**response.json())
 
-@app.post("/events")
-async def handle_event(event: dict):
-    """Handle Dapr pub/sub events."""
+
+@app.get("/exercises", response_model=List[Exercise])
+async def list_exercises():
+    """List all exercises (from state store query)."""
+    # Dapr state store query for exercises
+    try:
+        response = requests.post(
+            f"{DAPR_BASE_URL}/v1.0-alpha1/state/{STATE_STORE}/query",
+            json={
+                "filter": {"EQ": {"value.id": {"NEQ": ""}}},
+                "sort": [{"key": "value.difficulty", "order": "ASC"}],
+            }
+        )
+        if response.status_code == 200:
+            results = response.json().get("results", [])
+            return [Exercise(**r["data"]) for r in results]
+    except Exception:
+        pass
+
+    return []
+
+
+@app.post("/exercises/{exercise_id}/submit")
+async def submit_exercise(exercise_id: str, submission: Submission):
+    """Submit code for an exercise and publish for execution."""
+    # Publish code submission via Dapr
+    requests.post(
+        f"{DAPR_BASE_URL}/v1.0/publish/pubsub/code.submitted",
+        json={
+            "exercise_id": exercise_id,
+            "user_id": submission.user_id,
+            "code": submission.code,
+        }
+    )
+
+    return {"status": "submitted", "exercise_id": exercise_id}
+
+
+@app.post("/events/learning")
+async def handle_learning_event(event: dict):
+    """Handle learning events."""
     return {"status": "processed"}
 
 
