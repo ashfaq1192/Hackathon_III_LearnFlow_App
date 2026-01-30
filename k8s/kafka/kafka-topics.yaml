@@ -1,0 +1,41 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: learning-events
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: learnflow-kafka
+spec:
+  partitions: 1
+  replicas: 1
+  config:
+    retention.ms: 86400000  # 24 hours
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: code-submitted
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: learnflow-kafka
+spec:
+  partitions: 1
+  replicas: 1
+  config:
+    retention.ms: 86400000
+    cleanup.policy: delete
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: struggle-detected
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: learnflow-kafka
+spec:
+  partitions: 1
+  replicas: 1
+  config:
+    retention.ms: 86400000
+    cleanup.policy: delete

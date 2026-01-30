@@ -1,0 +1,29 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore
+  namespace: learnflow
+spec:
+  type: state.postgresql
+  version: v1
+  metadata:
+    - name: connectionString
+      secretKeyRef:
+        name: postgres-credentials
+        key: DATABASE_URL
+---
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: pubsub
+  namespace: learnflow
+spec:
+  type: pubsub.kafka
+  version: v1
+  metadata:
+    - name: brokers
+      value: "learnflow-kafka-kafka-bootstrap.kafka.svc.cluster.local:9092"
+    - name: authType
+      value: "none"
+    - name: consumerGroup
+      value: "learnflow-group"
