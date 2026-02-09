@@ -52,7 +52,7 @@ def test_explain_concept(mock_openai, mock_post):
 def test_explain_publishes_dapr_event(mock_openai, mock_post):
     mock_response = MagicMock()
     mock_response.choices = [MagicMock()]
-    mock_response.choices[0].message.content = "Explanation"
+    mock_response.choices[0].message.content = '{"explanation": "Variables store data", "code_example": "x = 5", "common_mistakes": "Forgetting to assign"}'
     mock_openai.chat.completions.create.return_value = mock_response
     mock_post.return_value = MagicMock(status_code=200)
 
