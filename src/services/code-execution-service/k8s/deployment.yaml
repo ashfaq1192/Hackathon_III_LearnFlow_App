@@ -20,8 +20,8 @@ spec:
     spec:
       containers:
       - name: code-execution-service
-        image: code-execution-service:latest
-        imagePullPolicy: IfNotPresent
+        image: ashfaq1192/learnflow-code-execution-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8000
         env:

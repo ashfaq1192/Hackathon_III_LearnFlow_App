@@ -29,14 +29,13 @@ DAPR_BASE_URL = f"http://localhost:{DAPR_HTTP_PORT}"
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 SYSTEM_PROMPT = """You are a Python teaching assistant for LearnFlow.
-Explain Python concepts clearly with:
-1. A simple analogy
-2. A clear explanation
-3. A practical code example
-4. Common mistakes to avoid
+Explain Python concepts clearly. You MUST respond with a JSON object containing exactly these fields:
+- "explanation": A clear explanation of the concept with a simple analogy
+- "code_example": A practical Python code example demonstrating the concept
+- "common_mistakes": Common mistakes to avoid when using this concept
 
 Adjust your explanation level based on the student's context.
-Keep explanations concise but thorough."""
+Keep explanations concise but thorough. Always respond with valid JSON only."""
 
 
 class ConceptRequest(BaseModel):
@@ -67,30 +66,56 @@ async def subscribe():
 
 
 @app.post("/explain", response_model=ConceptResponse)
+@app.post("/api/concepts/explain", response_model=ConceptResponse, include_in_schema=False)
 async def explain_concept(request: ConceptRequest):
     """Explain a Python concept using AI."""
     try:
+        import json as json_lib
+
         response = client.chat.completions.create(
-            model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
+            model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": f"Explain this Python concept for a {request.level} student: {request.concept}"}
-            ]
+            ],
+            response_format={"type": "json_object"}
         )
 
         content = response.choices[0].message.content
+        parsed = json_lib.loads(content)
+
+        def to_str(val, default=""):
+            if val is None:
+                return default
+            if isinstance(val, list):
+                return "\n".join(f"- {item}" for item in val)
+            return str(val)
+
+        explanation = to_str(parsed.get("explanation"), content)
+        code_example = to_str(parsed.get("code_example"))
+        common_mistakes = to_str(parsed.get("common_mistakes"))
 
         # Publish learning event via Dapr
-        requests.post(
-            f"{DAPR_BASE_URL}/v1.0/publish/pubsub/learning.events",
-            json={
-                "type": "concept_explained",
-                "user_id": request.user_id,
-                "concept": request.concept,
-                "level": request.level,
-            }
-        )
+        try:
+            requests.post(
+                f"{DAPR_BASE_URL}/v1.0/publish/pubsub/learning.events",
+                json={
+                    "type": "concept_explained",
+                    "user_id": request.user_id,
+                    "concept": request.concept,
+                    "level": request.level,
+                }
+            )
+        except Exception:
+            pass
 
+        return ConceptResponse(
+            concept=request.concept,
+            explanation=explanation,
+            code_example=code_example,
+            common_mistakes=common_mistakes,
+        )
+    except json_lib.JSONDecodeError:
         return ConceptResponse(
             concept=request.concept,
             explanation=content,

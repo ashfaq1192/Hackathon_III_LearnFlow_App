@@ -11,23 +11,22 @@ interface CodeEditorProps {
 
 export default function CodeEditor({ code, onChange }: CodeEditorProps) {
   return (
-    <div className="monaco-editor-container">
-      <Editor
-        height="400px"
-        language="python"
-        theme="vs-dark"
-        value={code}
-        onChange={(value) => onChange(value || '')}
-        options={{
-          minimap: { enabled: false },
-          fontSize: 14,
-          lineNumbers: 'on',
-          roundedSelection: false,
-          scrollBeyondLastLine: false,
-          automaticLayout: true,
-          tabSize: 4,
-        }}
-      />
-    </div>
+    <Editor
+      height="100%"
+      language="python"
+      theme="vs-dark"
+      value={code}
+      onChange={(value) => onChange(value || '')}
+      options={{
+        minimap: { enabled: false },
+        fontSize: 14,
+        lineNumbers: 'on',
+        roundedSelection: false,
+        scrollBeyondLastLine: false,
+        automaticLayout: true,
+        tabSize: 4,
+        padding: { top: 8 },
+      }}
+    />
   )
 }

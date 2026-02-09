@@ -58,6 +58,7 @@ async def subscribe():
 
 
 @app.post("/exercises", response_model=Exercise)
+@app.post("/api/exercises", response_model=Exercise, include_in_schema=False)
 async def create_exercise(exercise: Exercise):
     """Create a new coding exercise."""
     exercise.id = str(uuid.uuid4())
@@ -87,6 +88,7 @@ async def get_exercise(exercise_id: str):
 
 
 @app.get("/exercises", response_model=List[Exercise])
+@app.get("/api/exercises", response_model=List[Exercise], include_in_schema=False)
 async def list_exercises():
     """List all exercises (from state store query)."""
     # Dapr state store query for exercises

@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+.pytest_cache/
 
 # Environment
 .env
@@ -15,6 +16,8 @@ venv/
 build/
 dist/
 *.egg-info/
+docs/.docusaurus/
+docs/build/
 
 # IDE
 .vscode/

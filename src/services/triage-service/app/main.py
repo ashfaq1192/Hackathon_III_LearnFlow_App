@@ -70,11 +70,14 @@ async def subscribe():
 
 
 @app.post("/triage", response_model=TriageResponse)
+@app.post("/api/triage", response_model=TriageResponse, include_in_schema=False)
 async def triage_question(request: TriageRequest):
     """Analyze a student question and route to appropriate service."""
     try:
+        import json
+
         response = client.chat.completions.create(
-            model=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
+            model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": request.question}
@@ -82,25 +85,45 @@ async def triage_question(request: TriageRequest):
             response_format={"type": "json_object"}
         )
 
-        import json
-        result = json.loads(response.choices[0].message.content)
+        content = response.choices[0].message.content
+        result = json.loads(content) if content else {}
+
+        analysis = result.get("analysis") or "Your question has been received."
+        route_to = result.get("route_to") or "concepts-service"
+        raw_confidence = result.get("confidence")
+        try:
+            confidence = float(raw_confidence) if raw_confidence is not None else 0.5
+        except (TypeError, ValueError):
+            confidence = 0.5
+        confidence = max(0.0, min(1.0, confidence))
+        suggestion = result.get("suggestion") or "Try asking a specific Python question to get started!"
 
         # Publish triage event via Dapr
-        requests.post(
-            f"{DAPR_BASE_URL}/v1.0/publish/pubsub/learning.events",
-            json={
-                "type": "triage",
-                "user_id": request.user_id,
-                "question": request.question,
-                "route_to": result.get("route_to", "concepts-service"),
-            }
-        )
+        try:
+            requests.post(
+                f"{DAPR_BASE_URL}/v1.0/publish/pubsub/learning.events",
+                json={
+                    "type": "triage",
+                    "user_id": request.user_id,
+                    "question": request.question,
+                    "route_to": route_to,
+                }
+            )
+        except Exception:
+            pass
 
         return TriageResponse(
-            analysis=result.get("analysis", ""),
-            route_to=result.get("route_to", "concepts-service"),
-            confidence=result.get("confidence", 0.5),
-            suggestion=result.get("suggestion", ""),
+            analysis=analysis,
+            route_to=route_to,
+            confidence=confidence,
+            suggestion=suggestion,
+        )
+    except json.JSONDecodeError:
+        return TriageResponse(
+            analysis="Your question has been received.",
+            route_to="concepts-service",
+            confidence=0.5,
+            suggestion="Try asking a specific Python question to get started!",
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

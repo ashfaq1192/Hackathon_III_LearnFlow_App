@@ -20,8 +20,8 @@ spec:
     spec:
       containers:
       - name: triage-service
-        image: triage-service:latest
-        imagePullPolicy: IfNotPresent
+        image: ashfaq1192/learnflow-triage-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8000
         env:
@@ -29,6 +29,8 @@ spec:
           value: "3500"
         - name: DAPR_GRPC_PORT
           value: "50001"
+        - name: OPENAI_MODEL
+          value: "gpt-4o-mini"
         - name: OPENAI_API_KEY
           valueFrom:
             secretKeyRef:

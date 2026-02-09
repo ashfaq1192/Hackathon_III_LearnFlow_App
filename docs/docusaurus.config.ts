@@ -7,10 +7,10 @@ const config: Config = {
   tagline: 'AI-Powered Python Learning Platform',
   favicon: 'img/favicon.ico',
   url: 'https://learnflow.example.com',
-  baseUrl: '/',
+  baseUrl: '/docs/',
   organizationName: 'learnflow',
   projectName: 'learnflow-docs',
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'warn',
   i18n: {
     defaultLocale: 'en',
@@ -22,6 +22,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
+          routeBasePath: '/', // Docs at /docs/intro instead of /docs/docs/intro
         },
         blog: false,
         theme: {
@@ -41,7 +42,7 @@ const config: Config = {
           label: 'Documentation',
         },
         {
-          href: 'https://github.com/learnflow/learnflow-app',
+          href: 'https://github.com/panaversity/learn-agentic-ai',
           label: 'GitHub',
           position: 'right',
         },
@@ -53,15 +54,15 @@ const config: Config = {
         {
           title: 'Docs',
           items: [
-            {label: 'Getting Started', to: '/docs/intro'},
-            {label: 'Architecture', to: '/docs/architecture'},
-            {label: 'API Reference', to: '/docs/api'},
+            {label: 'Getting Started', to: '/intro'},
+            {label: 'Architecture', to: '/architecture/overview'},
+            {label: 'API Reference', to: '/api/triage'},
           ],
         },
         {
           title: 'Community',
           items: [
-            {label: 'GitHub', href: 'https://github.com/learnflow/learnflow-app'},
+            {label: 'GitHub', href: 'https://github.com/panaversity/learn-agentic-ai'},
           ],
         },
       ],

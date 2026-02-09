@@ -20,8 +20,8 @@ spec:
     spec:
       containers:
       - name: exercise-service
-        image: exercise-service:latest
-        imagePullPolicy: IfNotPresent
+        image: ashfaq1192/learnflow-exercise-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8000
         env:

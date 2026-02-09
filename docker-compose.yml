@@ -1,0 +1,81 @@
+version: "3.8"
+
+# LearnFlow - Local Development Environment
+# Usage: docker compose up
+# Requires .env file with OPENAI_API_KEY and DATABASE_URL
+
+services:
+  # Triage Service - AI agent for routing learner questions
+  triage-service:
+    build: ./src/services/triage-service
+    ports:
+      - "8001:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - DAPR_HTTP_PORT=3500
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Concepts Service - AI agent for explaining Python concepts
+  concepts-service:
+    build: ./src/services/concepts-service
+    ports:
+      - "8002:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - DAPR_HTTP_PORT=3500
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Exercise Service - CRUD API for coding exercises
+  exercise-service:
+    build: ./src/services/exercise-service
+    ports:
+      - "8003:8000"
+    environment:
+      - DAPR_HTTP_PORT=3500
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Code Execution Service - Safe Python code executor
+  code-execution-service:
+    build: ./src/services/code-execution-service
+    ports:
+      - "8004:8000"
+    environment:
+      - DAPR_HTTP_PORT=3500
+      - EXEC_TIMEOUT=10
+      - MAX_OUTPUT_SIZE=10000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Frontend - Next.js + Monaco Editor
+  frontend:
+    build: ./src/frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - TRIAGE_SERVICE_URL=http://triage-service:8000
+      - CONCEPTS_SERVICE_URL=http://concepts-service:8000
+      - EXERCISE_SERVICE_URL=http://exercise-service:8000
+      - CODE_EXECUTION_SERVICE_URL=http://code-execution-service:8000
+      - DATABASE_URL=${DATABASE_URL:-}
+      - AUTH_SECRET=${AUTH_SECRET:-supersecretkey}
+    depends_on:
+      - triage-service
+      - concepts-service
+      - exercise-service
+      - code-execution-service

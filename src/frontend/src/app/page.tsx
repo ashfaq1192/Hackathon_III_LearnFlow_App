@@ -4,6 +4,7 @@ import { useState } from 'react'
 import CodeEditor from '@/components/CodeEditor'
 import ExercisePanel from '@/components/ExercisePanel'
 import AIAssistant from '@/components/AIAssistant'
+import UserMenu from '@/components/UserMenu'
 
 export default function Home() {
   const [code, setCode] = useState('# Write your Python code here\nprint("Hello, LearnFlow!")\n')
@@ -12,66 +13,98 @@ export default function Home() {
 
   const runCode = async () => {
     setIsRunning(true)
+    setOutput('')
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code }),
       })
+      const contentType = response.headers.get('content-type') || ''
+      if (!response.ok) {
+        setOutput(`Error: Code execution service unavailable (${response.status})`)
+        setIsRunning(false)
+        return
+      }
+      if (!contentType.includes('application/json')) {
+        setOutput('Error: Code execution service returned unexpected response. Backend may not be running.')
+        setIsRunning(false)
+        return
+      }
       const result = await response.json()
       setOutput(result.output || result.error || 'No output')
     } catch (error) {
-      setOutput(`Error: ${error}`)
+      setOutput(`Error: ${error instanceof Error ? error.message : error}`)
     }
     setIsRunning(false)
   }
 
+  const handleExerciseSelect = (exercise: { starter_code?: string }) => {
+    if (exercise.starter_code) {
+      setCode(exercise.starter_code)
+      setOutput('')
+    }
+  }
+
   return (
-    <main className="min-h-screen p-8">
-      <header className="mb-8">
-        <h1 className="text-4xl font-bold text-center">LearnFlow</h1>
-        <p className="text-center text-gray-600 mt-2">
-          AI-Powered Python Learning Platform
-        </p>
+    <div className="h-screen flex flex-col bg-slate-900">
+      {/* Header */}
+      <header className="flex items-center justify-between px-4 py-2 bg-slate-800 border-b border-slate-700 shrink-0">
+        <div className="flex items-center gap-3">
+          <h1 className="text-lg font-bold text-white">LearnFlow</h1>
+          <span className="text-xs text-slate-500">AI-Powered Python Learning</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+            <span className="text-xs text-slate-400">Connected</span>
+          </div>
+          <UserMenu />
+        </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Exercise Panel */}
-        <div className="lg:col-span-1">
-          <ExercisePanel />
-        </div>
+      {/* Main content */}
+      <div className="flex flex-1 min-h-0">
+        {/* Left sidebar - Exercises */}
+        <aside className="w-72 border-r border-slate-700 overflow-y-auto shrink-0 bg-slate-800/50">
+          <ExercisePanel onSelectExercise={handleExerciseSelect} />
+        </aside>
 
-        {/* Code Editor */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-lg p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Code Editor</h2>
-              <button
-                onClick={runCode}
-                disabled={isRunning}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-              >
-                {isRunning ? 'Running...' : 'Run Code'}
-              </button>
-            </div>
-
-            <CodeEditor code={code} onChange={setCode} />
-
-            {/* Output */}
-            <div className="mt-4">
-              <h3 className="font-semibold mb-2">Output:</h3>
-              <pre className="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm min-h-[100px]">
-                {output || 'Click "Run Code" to see output'}
-              </pre>
-            </div>
+        {/* Main area */}
+        <main className="flex-1 flex flex-col min-w-0">
+          {/* Editor toolbar */}
+          <div className="flex items-center justify-between px-4 py-2 bg-slate-800/30 border-b border-slate-700 shrink-0">
+            <span className="text-sm text-slate-400">main.py</span>
+            <button
+              onClick={runCode}
+              disabled={isRunning}
+              className="px-4 py-1.5 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
+            >
+              {isRunning ? 'Running...' : 'Run Code'}
+            </button>
           </div>
-        </div>
-      </div>
 
-      {/* AI Assistant */}
-      <div className="mt-8">
-        <AIAssistant code={code} />
+          {/* Editor */}
+          <div className="flex-1 min-h-0">
+            <CodeEditor code={code} onChange={setCode} />
+          </div>
+
+          {/* Output panel */}
+          <div className="h-40 border-t border-slate-700 shrink-0 flex flex-col">
+            <div className="px-4 py-1.5 bg-slate-800/30 border-b border-slate-700 shrink-0">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Output</span>
+            </div>
+            <pre className="flex-1 px-4 py-2 bg-slate-900 text-green-400 font-mono text-sm overflow-auto">
+              {output || 'Click "Run Code" to see output'}
+            </pre>
+          </div>
+
+          {/* AI Assistant panel */}
+          <div className="border-t border-slate-700 shrink-0">
+            <AIAssistant code={code} />
+          </div>
+        </main>
       </div>
-    </main>
+    </div>
   )
 }

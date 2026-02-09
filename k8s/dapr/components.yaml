@@ -3,14 +3,23 @@ kind: Component
 metadata:
   name: statestore
   namespace: learnflow
+  annotations:
+    dapr.io/component-init-timeout: "120s"
 spec:
   type: state.postgresql
   version: v1
+  initTimeout: 120s
   metadata:
     - name: connectionString
       secretKeyRef:
         name: postgres-credentials
         key: DATABASE_URL
+    - name: tablePrefix
+      value: ""
+    - name: metadataTableName
+      value: "dapr_metadata"
+    - name: tableName
+      value: "state"
 ---
 apiVersion: dapr.io/v1alpha1
 kind: Component

@@ -1,16 +1,16 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: learnflow-ingress
+  name: learnflow-frontend-ingress
   namespace: learnflow
   annotations:
-    konghq.com/strip-path: "true"
+    konghq.com/strip-path: "false"
+    konghq.com/protocols: "http"
 spec:
   ingressClassName: kong
   rules:
     - http:
         paths:
-          # Frontend
           - path: /
             pathType: Prefix
             backend:
@@ -18,32 +18,66 @@ spec:
                 name: learnflow-frontend
                 port:
                   number: 80
-          # API routes
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: learnflow-api-ingress
+  namespace: learnflow
+  annotations:
+    konghq.com/strip-path: "false"
+    konghq.com/protocols: "http"
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
           - path: /api/triage
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: triage-service
                 port:
                   number: 80
           - path: /api/concepts
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: concepts-service
                 port:
                   number: 80
           - path: /api/exercises
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: exercise-service
                 port:
                   number: 80
           - path: /api/execute
-            pathType: Prefix
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: code-execution-service
+                port:
+                  number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: learnflow-docs-ingress
+  namespace: learnflow
+  annotations:
+    konghq.com/strip-path: "false"
+    konghq.com/protocols: "http"
+spec:
+  ingressClassName: kong
+  rules:
+    - http:
+        paths:
+          - path: /docs
+            pathType: Prefix
+            backend:
+              service:
+                name: learnflow-docs
                 port:
                   number: 80

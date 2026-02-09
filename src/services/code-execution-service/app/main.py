@@ -77,6 +77,7 @@ def check_code_safety(code: str) -> Optional[str]:
 
 
 @app.post("/execute", response_model=CodeResponse)
+@app.post("/api/execute", response_model=CodeResponse, include_in_schema=False)
 async def execute_code(request: CodeRequest):
     """Execute Python code in a sandboxed environment."""
     # Safety check
