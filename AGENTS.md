@@ -8,10 +8,13 @@
 
 ```
 Browser → Kong API Gateway → Microservices (with Dapr sidecars)
-                                ├── triage-service      (AI routing)
-                                ├── concepts-service    (AI explanations)
-                                ├── exercise-service    (CRUD + state store)
-                                └── code-execution-service (sandbox)
+                                ├── triage-service          (AI routing)
+                                ├── concepts-service        (AI explanations)
+                                ├── exercise-service        (CRUD + quizzes + grading)
+                                ├── code-execution-service  (sandbox)
+                                ├── debug-service           (AI error analysis)
+                                ├── code-review-service     (AI code quality review)
+                                └── progress-service        (student tracking + curriculum)
                               ↕ Dapr ↕
                     State: Neon PostgreSQL    Pub/Sub: Kafka
 ```
@@ -36,15 +39,19 @@ learnflow-app/
 ├── .claude/skills/                     # Reusable skills (both agents)
 ├── src/
 │   ├── frontend/                       # Next.js 14 + Monaco Editor
-│   │   ├── src/app/                    # Pages (home, login, signup)
-│   │   ├── src/components/             # CodeEditor, AIAssistant, ExercisePanel
-│   │   ├── lib/auth.ts                 # Better Auth configuration
+│   │   ├── src/app/                    # Pages (home, login, signup, dashboard, learn, teacher)
+│   │   ├── src/components/             # CodeEditor, AIAssistant, ExercisePanel, QuizModal, UserMenu
+│   │   ├── lib/auth.ts                 # Better Auth configuration (Neon PostgreSQL)
+│   │   ├── lib/auth-client.ts          # Better Auth React client
 │   │   └── k8s/deployment.yaml
 │   └── services/
 │       ├── triage-service/             # Port 8000 | AI question routing
 │       ├── concepts-service/           # Port 8000 | AI concept explanations
-│       ├── exercise-service/           # Port 8000 | Exercise CRUD + Dapr state
-│       └── code-execution-service/     # Port 8000 | Sandboxed Python execution
+│       ├── exercise-service/           # Port 8000 | Exercise CRUD + quizzes + auto-grading
+│       ├── code-execution-service/     # Port 8000 | Sandboxed Python execution
+│       ├── debug-service/              # Port 8000 | AI error analysis and debugging
+│       ├── code-review-service/        # Port 8000 | AI code quality review
+│       └── progress-service/           # Port 8000 | Student mastery tracking + curriculum
 ├── k8s/
 │   ├── dapr/components.yaml            # State store (PostgreSQL) + Pub/Sub (Kafka)
 │   ├── kafka/                          # Strimzi Kafka cluster + topics
@@ -54,12 +61,15 @@ learnflow-app/
 
 ## Service Details
 
-| Service | Purpose | AI? | Dapr | Endpoints |
-|---------|---------|-----|------|-----------|
-| triage-service | Routes learner questions to correct service | OpenAI GPT | pub/sub | `POST /triage`, `POST /events/struggle` |
-| concepts-service | Explains Python concepts with examples | OpenAI GPT | pub/sub | `POST /explain`, `POST /events/learning` |
-| exercise-service | CRUD for coding exercises | No | state store + pub/sub | `POST /exercises`, `GET /exercises`, `POST /exercises/{id}/submit` |
-| code-execution-service | Runs Python code in sandbox | No | pub/sub | `POST /execute`, `POST /events/code` |
+| Service | Purpose | AI? | Dapr | Key Endpoints |
+|---------|---------|-----|------|---------------|
+| triage-service | Routes learner questions to correct service | OpenAI GPT | pub/sub | `POST /api/triage/route`, `POST /events/struggle` |
+| concepts-service | Explains Python concepts with examples | OpenAI GPT | pub/sub | `POST /api/concepts/explain`, `POST /events/learning` |
+| exercise-service | Exercise CRUD, quizzes, auto-grading | OpenAI GPT | state + pub/sub | `POST /api/exercises`, `GET /api/exercises`, `POST /api/exercises/{id}/submit`, `GET /api/quizzes/generate` |
+| code-execution-service | Runs Python code in sandbox | No | pub/sub | `POST /api/execute/run`, `POST /events/code` |
+| debug-service | AI-powered error analysis and fix suggestions | OpenAI GPT | pub/sub | `POST /api/debug/analyze`, `POST /events/debug` |
+| code-review-service | AI code quality review and feedback | OpenAI GPT | pub/sub | `POST /api/review/analyze`, `POST /events/review` |
+| progress-service | Student mastery tracking and curriculum | OpenAI GPT | state + pub/sub | `GET /api/progress/{user}`, `GET /api/curriculum/modules`, `POST /events/progress` |
 
 All services expose `GET /health` and `GET /dapr/subscribe`.
 
