@@ -8,11 +8,17 @@
   padding: 0;
 }
 
+html {
+  overflow-y: scroll !important;
+  scroll-behavior: smooth;
+}
+
 body {
   background: #0f172a;
   color: #e2e8f0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
-  overflow: hidden;
+  overflow-y: auto !important;
+  min-height: 100vh;
 }
 
 /* Scrollbar styling */

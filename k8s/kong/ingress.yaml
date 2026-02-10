@@ -60,6 +60,41 @@ spec:
                 name: code-execution-service
                 port:
                   number: 80
+          - path: /api/debug
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: debug-service
+                port:
+                  number: 80
+          - path: /api/review
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: code-review-service
+                port:
+                  number: 80
+          - path: /api/progress
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: progress-service
+                port:
+                  number: 80
+          - path: /api/curriculum
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: progress-service
+                port:
+                  number: 80
+          - path: /api/quizzes
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: exercise-service
+                port:
+                  number: 80
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

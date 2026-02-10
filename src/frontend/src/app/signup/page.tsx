@@ -7,6 +7,7 @@ export default function SignupPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [role, setRole] = useState<'student' | 'teacher'>('student')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -19,15 +20,22 @@ export default function SignupPage() {
       const res = await fetch('/api/auth/sign-up/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, role }),
       })
 
       if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message || 'Signup failed')
+        const text = await res.text()
+        let message = 'Signup failed'
+        try {
+          const data = JSON.parse(text)
+          message = data.message || message
+        } catch {
+          if (text) message = text
+        }
+        throw new Error(message)
       }
 
-      window.location.href = '/'
+      window.location.href = role === 'teacher' ? '/teacher' : '/dashboard'
     } catch (err: any) {
       setError(err.message)
     }
@@ -46,6 +54,36 @@ export default function SignupPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2 text-slate-300">I am a...</label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setRole('student')}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all text-sm font-medium ${
+                  role === 'student'
+                    ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                    : 'border-slate-600 bg-slate-700 text-slate-300 hover:border-slate-500'
+                }`}
+              >
+                <div className="text-lg mb-1">Student</div>
+                <div className="text-xs opacity-70">Learn Python with AI</div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole('teacher')}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all text-sm font-medium ${
+                  role === 'teacher'
+                    ? 'border-purple-500 bg-purple-500/10 text-purple-400'
+                    : 'border-slate-600 bg-slate-700 text-slate-300 hover:border-slate-500'
+                }`}
+              >
+                <div className="text-lg mb-1">Teacher</div>
+                <div className="text-xs opacity-70">Monitor & guide students</div>
+              </button>
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium mb-1 text-slate-300">Name</label>
             <input

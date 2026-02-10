@@ -33,13 +33,15 @@ services:
       timeout: 5s
       retries: 3
 
-  # Exercise Service - CRUD API for coding exercises
+  # Exercise Service - CRUD API for coding exercises, grading, and quizzes
   exercise-service:
     build: ./src/services/exercise-service
     ports:
       - "8003:8000"
     environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - DAPR_HTTP_PORT=3500
+      - CODE_EXECUTION_SERVICE_URL=http://code-execution-service:8000
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s
@@ -61,6 +63,48 @@ services:
       timeout: 5s
       retries: 3
 
+  # Debug Service - AI agent for analyzing code errors
+  debug-service:
+    build: ./src/services/debug-service
+    ports:
+      - "8005:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - DAPR_HTTP_PORT=3500
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Code Review Service - AI agent for reviewing code quality
+  code-review-service:
+    build: ./src/services/code-review-service
+    ports:
+      - "8006:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - DAPR_HTTP_PORT=3500
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Progress Service - Student mastery tracking and curriculum data
+  progress-service:
+    build: ./src/services/progress-service
+    ports:
+      - "8007:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - DAPR_HTTP_PORT=3500
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   # Frontend - Next.js + Monaco Editor
   frontend:
     build: ./src/frontend
@@ -72,6 +116,9 @@ services:
       - CONCEPTS_SERVICE_URL=http://concepts-service:8000
       - EXERCISE_SERVICE_URL=http://exercise-service:8000
       - CODE_EXECUTION_SERVICE_URL=http://code-execution-service:8000
+      - DEBUG_SERVICE_URL=http://debug-service:8000
+      - CODE_REVIEW_SERVICE_URL=http://code-review-service:8000
+      - PROGRESS_SERVICE_URL=http://progress-service:8000
       - DATABASE_URL=${DATABASE_URL:-}
       - AUTH_SECRET=${AUTH_SECRET:-supersecretkey}
     depends_on:
@@ -79,3 +126,6 @@ services:
       - concepts-service
       - exercise-service
       - code-execution-service
+      - debug-service
+      - code-review-service
+      - progress-service

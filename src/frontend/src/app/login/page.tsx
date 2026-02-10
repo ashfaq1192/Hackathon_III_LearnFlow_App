@@ -22,19 +22,32 @@ export default function LoginPage() {
       })
 
       if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message || 'Login failed')
+        const text = await res.text()
+        let message = 'Login failed'
+        try {
+          const data = JSON.parse(text)
+          message = data.message || message
+        } catch {
+          if (text) message = text
+        }
+        throw new Error(message)
       }
 
-      window.location.href = '/'
+      // Fetch session to get role for redirect
+      const sessionRes = await fetch('/api/auth/get-session', {
+        credentials: 'include',
+      })
+      if (sessionRes.ok) {
+        const session = await sessionRes.json()
+        const role = session?.user?.role || 'student'
+        window.location.href = role === 'teacher' ? '/teacher' : '/dashboard'
+      } else {
+        window.location.href = '/dashboard'
+      }
     } catch (err: any) {
       setError(err.message)
     }
     setLoading(false)
-  }
-
-  const handleOAuth = (provider: string) => {
-    window.location.href = `/api/auth/sign-in/${provider}`
   }
 
   return (
@@ -79,33 +92,6 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
-
-        {/* OAuth providers - uncomment when credentials are configured
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-600"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-slate-800 text-slate-400">Or continue with</span>
-            </div>
-          </div>
-          <div className="mt-4 flex gap-4">
-            <button
-              onClick={() => handleOAuth('google')}
-              className="flex-1 py-2 border border-slate-600 rounded text-slate-300 hover:bg-slate-700 transition-colors"
-            >
-              Google
-            </button>
-            <button
-              onClick={() => handleOAuth('github')}
-              className="flex-1 py-2 border border-slate-600 rounded text-slate-300 hover:bg-slate-700 transition-colors"
-            >
-              GitHub
-            </button>
-          </div>
-        </div>
-        */}
 
         <p className="mt-6 text-center text-sm text-slate-400">
           Don't have an account?{' '}

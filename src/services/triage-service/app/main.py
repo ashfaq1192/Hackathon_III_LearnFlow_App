@@ -10,7 +10,7 @@ from openai import OpenAI
 app = FastAPI(
     title="triage-service",
     description="AI agent that analyzes learner struggles and routes to appropriate services",
-    version="1.0.0"
+    version="2.0.0"
 )
 
 app.add_middleware(
@@ -28,11 +28,20 @@ DAPR_BASE_URL = f"http://localhost:{DAPR_HTTP_PORT}"
 # OpenAI configuration
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+STRUGGLE_KEYWORDS = [
+    "i don't understand", "i'm stuck", "help me", "confused",
+    "i can't figure", "what am i doing wrong", "doesn't make sense",
+    "i'm lost", "too hard", "give up",
+]
+
 SYSTEM_PROMPT = """You are the Triage Agent for LearnFlow, an AI-powered Python learning platform.
 Your role is to analyze student questions and struggles, then route them to the appropriate service:
 - If the student needs a concept explained -> route to "concepts-service"
 - If the student needs a coding exercise -> route to "exercise-service"
 - If the student wants to run code -> route to "code-execution-service"
+- If the student has a code error or bug -> route to "debug-service"
+- If the student wants code feedback or review -> route to "code-review-service"
+- If the student asks about their progress or mastery -> route to "progress-service"
 
 Respond with a JSON object containing:
 - "analysis": brief analysis of the student's need
@@ -73,6 +82,23 @@ async def subscribe():
 @app.post("/api/triage", response_model=TriageResponse, include_in_schema=False)
 async def triage_question(request: TriageRequest):
     """Analyze a student question and route to appropriate service."""
+    # Detect struggle keywords
+    question_lower = request.question.lower()
+    is_struggling = any(kw in question_lower for kw in STRUGGLE_KEYWORDS)
+
+    if is_struggling and request.user_id:
+        try:
+            requests.post(
+                f"{DAPR_BASE_URL}/v1.0/publish/pubsub/struggle.detected",
+                json={
+                    "user_id": request.user_id,
+                    "struggle_type": "verbal_expression",
+                    "details": {"message": request.question},
+                },
+            )
+        except Exception:
+            pass
+
     try:
         import json
 

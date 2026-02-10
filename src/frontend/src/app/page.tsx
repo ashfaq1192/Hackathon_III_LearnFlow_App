@@ -5,6 +5,7 @@ import CodeEditor from '@/components/CodeEditor'
 import ExercisePanel from '@/components/ExercisePanel'
 import AIAssistant from '@/components/AIAssistant'
 import UserMenu from '@/components/UserMenu'
+import Link from 'next/link'
 
 export default function Home() {
   const [code, setCode] = useState('# Write your Python code here\nprint("Hello, LearnFlow!")\n')
@@ -47,12 +48,20 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-900">
+    <div className="h-screen flex flex-col bg-slate-900 overflow-hidden">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-2 bg-slate-800 border-b border-slate-700 shrink-0">
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-bold text-white">LearnFlow</h1>
           <span className="text-xs text-slate-500">AI-Powered Python Learning</span>
+          <nav className="flex items-center gap-2 ml-4">
+            <Link href="/dashboard" className="px-2 py-1 text-xs text-slate-400 hover:text-white rounded hover:bg-slate-700 transition-colors">
+              Dashboard
+            </Link>
+            <Link href="/learn" className="px-2 py-1 text-xs text-slate-400 hover:text-white rounded hover:bg-slate-700 transition-colors">
+              Learn
+            </Link>
+          </nav>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">

@@ -1,0 +1,128 @@
+{
+  "metadata": {
+    "analyzed_at": "2026-01-30T14:28:39.671628Z",
+    "analyzer_version": "1.0.0",
+    "repo_root": "/mnt/d/projects/Hackathon-III/learnflow-app",
+    "total_files": 144,
+    "total_dirs": 84,
+    "analysis_duration_ms": 2927
+  },
+  "structure": {
+    "root_directories": [
+      {
+        "name": ".claude",
+        "path": ".claude",
+        "file_count": 135,
+        "subdirs": [
+          "skills"
+        ]
+      },
+      {
+        "name": "docs",
+        "path": "docs",
+        "file_count": 16,
+        "subdirs": [
+          "docs",
+          "src",
+          "static"
+        ]
+      },
+      {
+        "name": "k8s",
+        "path": "k8s",
+        "file_count": 4,
+        "subdirs": [
+          "dapr",
+          "kafka",
+          "kong"
+        ]
+      },
+      {
+        "name": "src",
+        "path": "src",
+        "file_count": 40,
+        "subdirs": [
+          "frontend",
+          "services"
+        ]
+      }
+    ],
+    "max_depth_reached": 5,
+    "ignored_dirs": [
+      ".eggs",
+      ".git",
+      ".gradle",
+      ".idea",
+      ".mypy_cache",
+      ".pytest_cache",
+      ".specify",
+      ".tox",
+      ".venv",
+      ".vscode",
+      "__pycache__",
+      "bin",
+      "build",
+      "coverage",
+      "dist",
+      "eggs",
+      "htmlcov",
+      "lib",
+      "lib64",
+      "node_modules",
+      "obj",
+      "target",
+      "vendor",
+      "venv"
+    ]
+  },
+  "key_files": {
+    "documentation": [],
+    "configuration": [
+      "docs/package.json",
+      "src/frontend/package.json",
+      "src/services/code-execution-service/requirements.txt",
+      "src/services/concepts-service/requirements.txt",
+      "src/services/exercise-service/requirements.txt",
+      "src/services/triage-service/requirements.txt"
+    ],
+    "infrastructure": [
+      "src/frontend/Dockerfile",
+      "src/services/code-execution-service/Dockerfile",
+      "src/services/concepts-service/Dockerfile",
+      "src/services/exercise-service/Dockerfile",
+      "src/services/triage-service/Dockerfile"
+    ],
+    "ci_cd": [],
+    "other": [
+      ".gitignore"
+    ]
+  },
+  "patterns": {
+    "primary_language": "python",
+    "has_tests": true,
+    "test_framework": "unknown",
+    "has_docker": true,
+    "has_kubernetes": false,
+    "has_ci": false,
+    "project_type": "monorepo"
+  },
+  "conventions": {
+    "detected_patterns": [
+      "Source code in src/ directory",
+      "Documentation in docs/ directory"
+    ],
+    "notable_files": [
+      {
+        "path": "src/frontend/tsconfig.json",
+        "significance": "Project standard: tsconfig.json"
+      }
+    ]
+  },
+  "warnings": [
+    "Max depth 5 reached at: /mnt/d/projects/Hackathon-III/learnflow-app/.claude/skills/agents-md-gen/scripts/templates",
+    "Max depth 5 reached at: /mnt/d/projects/Hackathon-III/learnflow-app/.claude/skills/fastapi-dapr-agent/scripts/templates",
+    "Max depth 5 reached at: /mnt/d/projects/Hackathon-III/learnflow-app/src/frontend/src/app/api",
+    "Max depth 5 reached at: /mnt/d/projects/Hackathon-III/learnflow-app/src/frontend/src/app/login",
+    "Max depth 5 reached at: /mnt/d/projects/Hackathon-III/learnflow-app/src/frontend/src/app/signup"
+  ]
+}
