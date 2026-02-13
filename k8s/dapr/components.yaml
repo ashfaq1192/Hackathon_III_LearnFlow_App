@@ -9,6 +9,7 @@ spec:
   type: state.postgresql
   version: v1
   initTimeout: 120s
+  ignoreErrors: true
   metadata:
     - name: connectionString
       secretKeyRef:

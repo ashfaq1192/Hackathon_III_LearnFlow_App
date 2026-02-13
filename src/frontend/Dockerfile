@@ -20,6 +20,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_API_URL=""
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
+# Suppress Better Auth build warning (real secret comes from K8s at runtime)
+ARG BETTER_AUTH_SECRET=build-time-placeholder
+ENV BETTER_AUTH_SECRET=$BETTER_AUTH_SECRET
+
 RUN npm run build
 
 # Production image, copy all the files and run next

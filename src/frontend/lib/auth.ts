@@ -15,6 +15,7 @@ export const auth = betterAuth({
     "http://localhost:3000",
     "http://localhost:8080",
     "http://127.0.0.1:3000",
+    ...(process.env.BETTER_AUTH_URL ? [process.env.BETTER_AUTH_URL] : []),
   ],
   emailAndPassword: {
     enabled: true,

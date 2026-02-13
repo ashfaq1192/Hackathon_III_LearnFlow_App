@@ -124,15 +124,27 @@ Skills in `.claude/skills/` can be used by both Claude Code and Goose:
 
 ## Deployment
 
+### Live (GKE)
+**URL: http://35.222.110.147**
+
+Deployed on GKE Standard cluster (`us-central1`) with Kong LoadBalancer ingress.
+
+```bash
+source .env
+./k8s/deploy-gke.sh        # Full deployment
+./k8s/verify-gke.sh        # Verification
+```
+
 ### Local (Docker Compose)
 ```bash
-cp .env.example .env  # Fill in OPENAI_API_KEY and DATABASE_URL
+cp .env.example .env  # Fill in OPENAI_API_KEY, DATABASE_URL, AUTH_SECRET
 docker compose up
 ```
 
 ### Kubernetes (Minikube)
 ```bash
 minikube start --cpus=4 --memory=8192 --driver=docker
+source .env
 ./scripts/create-k8s-secrets.sh
 ./scripts/deploy.sh
 ```
